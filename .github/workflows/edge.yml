@@ -1,0 +1,39 @@
+name: edge
+
+# The Cloudflare edge of the four projects (device/cloudflare/projects.toml): on every push touching it, check that the
+# account and the manifest agree, then deploy the Worker built from this repository (aphrody-sites, apps/r2-site).
+on:
+  push:
+    branches: [main, dev]
+    paths:
+      - "apps/r2-site/**"
+      - "device/cloudflare/projects.*"
+      - ".github/workflows/edge.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: edge
+  cancel-in-progress: false
+
+env:
+  CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+  CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+jobs:
+  edge:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: oven-sh/setup-bun@v2
+      - name: Test the Worker
+        working-directory: apps/r2-site
+        run: bun build.ts && bun test src/entry.cf.test.ts
+      - name: Account and projects.toml agree
+        run: bun device/cloudflare/projects.ts
+      - name: Deploy aphrody-sites
+        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/dev'
+        working-directory: apps/r2-site
+        run: bunx wrangler@4.161.0 deploy -c wrangler/aphrody-sites.toml

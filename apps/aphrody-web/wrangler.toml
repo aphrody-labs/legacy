@@ -19,7 +19,7 @@ bucket_name = "aphrody-dist"
 
 [vars]
 PROJECT = "aphrody"
-# Empty: /api/*, /g/*, /search go to the zone origin (cloudflared tunnel mig-prd -> prd aphrody service).
+# Empty: /api/*, /g/*, /search go to the zone origin (cloudflared tunnel aphrody -> prd aphrody service).
 ORIGIN_URL = ""
 
 # Web Analytics + Speed Insights of aphrody.com: the Insights Durable Object lives in the platform Worker.

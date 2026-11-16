@@ -21,7 +21,7 @@ valeurs secrètes ne figurent nulle part ici : seulement les noms de variables.
   | `auto-api`      | `auto-app:20261112T112714Z-alpine`          | 1,76 Go | API, `/srv/auto/arrivages` en lecture                      |
   | `auto-worker`   | `auto-app:20261112T112714Z-alpine`          | 1,76 Go | worker (seul worker actif)                                 |
   | `auto-web`      | `auto-web:20261112T112714Z-alpine`          | 503 Mo  | front, `/srv/auto/media` et `/srv/auto/distributions`      |
-  | `auto-tunnel`   | `cloudflare/cloudflared:latest` (2026.10.6) | 99 Mo   | tunnel `auto-usa` `6df6fb40-...` -> `http://auto-web:3001` |
+  | `auto-tunnel`   | `cloudflare/cloudflared:latest` (2026.10.6) | 99 Mo   | tunnel `auto` `6df6fb40-...` -> `http://auto-web:3001` |
 
 - Images : `docker/app.Dockerfile` sur `oven/bun:1.4.4-alpine` (Bun.Image, Bun.WebView présents ; Bun.Video absent,
   les nœuds vidéo échouent proprement), Chromium et OCR par `apk`, natif musl de

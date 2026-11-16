@@ -7,6 +7,7 @@
   "scripts": {
     "start": "bun run src/entry.vps.ts",
     "test": "bun test",
+    "build": "bun build.ts",
     "check": "bun check"
   }
 }

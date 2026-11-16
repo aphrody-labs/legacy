@@ -1,0 +1,35 @@
+# Worker "aphrody-sites": every static R2 site of the aphrody zones (apps/r2-site, serveStatic). No secrets.
+# Deploy: CI (.github/workflows/edge.yml) on every push touching apps/r2-site, or by hand from apps/r2-site:
+#   `ay auth mint cloudflare -- bunx wrangler@4.161.0 deploy -c wrangler/aphrody-sites.toml` (--dry-run first).
+# One site = one SITES entry + one custom domain route below. Replaces the Workers cdn-aphrody-com,
+# creator-aphrody-com, downloads-portable and aphrody-app-site.
+name = "aphrody-sites"
+main = "../dist/aphrody-sites.js"
+compatibility_date = "2026-11-01"
+workers_dev = false
+routes = [
+  { pattern = "cdn.aphrody.com", custom_domain = true },
+  { pattern = "creator.aphrody.com", custom_domain = true },
+  { pattern = "downloads.aphrody.com", custom_domain = true },
+  { pattern = "shell.aphrody.app", custom_domain = true }, # was aphrody.app until 2026-11-13 (apex = system/deploy)
+]
+[build]
+command = "bun build.ts"
+cwd = ".."
+[[r2_buckets]]
+binding = "ASSETS"
+bucket_name = "aphrody-assets"
+[[r2_buckets]]
+binding = "DIST"
+bucket_name = "aphrody-dist"
+[observability]
+enabled = true
+[vars]
+SITES = '''
+{
+  "cdn.aphrody.com": { "bucket": "ASSETS", "prefix": "", "service": "aphrody-cdn", "spa": "0", "crossOrigin": "1" },
+  "creator.aphrody.com": { "bucket": "DIST", "prefix": "sites/creator.aphrody.com", "service": "aphrody-creator", "spa": "1" },
+  "downloads.aphrody.com": { "bucket": "DIST", "prefix": "aphrody", "service": "aphrody-downloads", "spa": "0" },
+  "shell.aphrody.app": { "bucket": "DIST", "prefix": "sites/aphrody.app", "service": "aphrody-app", "spa": "1" }
+}
+'''

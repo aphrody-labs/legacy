@@ -16,12 +16,12 @@ account = "@@accounts.cloudflare_account_id@@"
 "rosegriffon.fr" = "@@zones.rosegriffon.fr@@"
 
 # Remote-managed tunnels. Connector: systemd unit + token in an encrypted systemd credential on the host.
-[tunnels.mig-prd]
+[tunnels.aphrody]
 id = "72153924-6650-4dd4-bced-f8b6731edcd8"
 host = "prd"
 ingress = [
   # Cluster LB ports (HAProxy on fr1/fr2/prd, device/cluster, docs/infra/CLUSTER.md): same answer on every host, so
-  # mig-prd connector replicas can run anywhere. Rollback: the old origins 127.0.0.1:8780 / :8797, @@hosts.prd.mesh_ip@@:8182 / :8766.
+  # aphrody connector replicas can run anywhere. Rollback: the old origins 127.0.0.1:8780 / :8797, @@hosts.prd.mesh_ip@@:8182 / :8766.
   { hostname = "mig-test.aphrody.com", service = "http://127.0.0.1:19780" },
   { hostname = "mig-downloads.aphrody.com", service = "http://127.0.0.1:19797" },
   { hostname = "mig-depot.aphrody.com", service = "http://127.0.0.1:19182" },
@@ -49,7 +49,7 @@ ingress = [
   { service = "http_status:404" },
 ]
 
-# RETIRED 2026-11-15: its three hostnames are served by mig-prd (DNS switched, proven). Connector cloudflared-fr2 stopped; rollback = point the
+# RETIRED 2026-11-15: its three hostnames are served by aphrody (DNS switched, proven). Connector cloudflared-fr2 stopped; rollback = point the
 # three DNS records back (rollback lines below) and `systemctl enable --now cloudflared-fr2` on fr2.
 [tunnels.fr2]
 id = "88aa6a53-0a9a-4a5b-a9b6-3d3394dd978d"
@@ -71,73 +71,73 @@ ingress = [
 "_nativelink-cas._tcp.aphrody.com" = { target = "fr1.mesh", port = 50061 }
 
 [dns."aphrody.com"]
-"aphrody.com" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "A @@hosts.fr2.public_ip@@" }
-"ssh-prd.aphrody.com" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "delete" }
-"ssh-fr2.aphrody.com" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "CNAME tunnel:fr2" }
-"mcp-origin.aphrody.com" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "CNAME tunnel:fr2" }
-"gnu.aphrody.com" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "CNAME tunnel:fr2" }
-"os.aphrody.com" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "A @@hosts.fr2.public_ip@@" }
-"admin.aphrody.com" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "CNAME aphrody.com" }
-"ai.aphrody.com" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "CNAME aphrody.com" }
-"art.aphrody.com" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "CNAME aphrody.com" }
-"auth.aphrody.com" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "CNAME aphrody.com" }
-"bot.aphrody.com" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "CNAME aphrody.com" }
-"bxc.aphrody.com" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "CNAME aphrody.com" }
-"cad.aphrody.com" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "CNAME aphrody.com" }
-"calendar.aphrody.com" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "CNAME aphrody.com" }
-"chat.aphrody.com" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "CNAME aphrody.com" }
-"console.aphrody.com" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "CNAME aphrody.com" }
-"control.aphrody.com" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "CNAME aphrody.com" }
-"design.aphrody.com" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "CNAME aphrody.com" }
-"docs.aphrody.com" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "CNAME aphrody.com" }
-"drive.aphrody.com" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "CNAME aphrody.com" }
-"fig.aphrody.com" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "CNAME aphrody.com" }
-"inacord.aphrody.com" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "CNAME aphrody.com" }
-"mail.aphrody.com" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "CNAME aphrody.com" }
-"maps.aphrody.com" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "CNAME aphrody.com" }
-# mcp.aphrody.com is the Worker aphrody-mcp-gateway (custom domain, record owned by Workers: device/cloudflare/workers/aphrody-mcp-gateway/deploy.ts); rollback = CNAME tunnel:mig-prd.
-"meet.aphrody.com" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "CNAME aphrody.com" }
-"n2b.aphrody.com" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "CNAME aphrody.com" }
-"nie.aphrody.com" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "CNAME aphrody.com" }
-"pdf.aphrody.com" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "CNAME aphrody.com" }
-"photos.aphrody.com" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "CNAME aphrody.com" }
-"play.aphrody.com" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "CNAME aphrody.com" }
-"search.aphrody.com" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "CNAME aphrody.com" }
-"sheets.aphrody.com" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "CNAME aphrody.com" }
-"slides.aphrody.com" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "CNAME aphrody.com" }
-"sound.aphrody.com" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "CNAME aphrody.com" }
-"status.aphrody.com" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "CNAME aphrody.com" }
-"store.aphrody.com" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "CNAME aphrody.com" }
-"translate.aphrody.com" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "CNAME aphrody.com" }
+"aphrody.com" = { type = "CNAME", content = "tunnel:aphrody", rollback = "A @@hosts.fr2.public_ip@@" }
+"ssh-prd.aphrody.com" = { type = "CNAME", content = "tunnel:aphrody", rollback = "delete" }
+"ssh-fr2.aphrody.com" = { type = "CNAME", content = "tunnel:aphrody", rollback = "CNAME tunnel:fr2" }
+"mcp-origin.aphrody.com" = { type = "CNAME", content = "tunnel:aphrody", rollback = "CNAME tunnel:fr2" }
+"gnu.aphrody.com" = { type = "CNAME", content = "tunnel:aphrody", rollback = "CNAME tunnel:fr2" }
+"os.aphrody.com" = { type = "CNAME", content = "tunnel:aphrody", rollback = "A @@hosts.fr2.public_ip@@" }
+"admin.aphrody.com" = { type = "CNAME", content = "tunnel:aphrody", rollback = "CNAME aphrody.com" }
+"ai.aphrody.com" = { type = "CNAME", content = "tunnel:aphrody", rollback = "CNAME aphrody.com" }
+"art.aphrody.com" = { type = "CNAME", content = "tunnel:aphrody", rollback = "CNAME aphrody.com" }
+"auth.aphrody.com" = { type = "CNAME", content = "tunnel:aphrody", rollback = "CNAME aphrody.com" }
+"bot.aphrody.com" = { type = "CNAME", content = "tunnel:aphrody", rollback = "CNAME aphrody.com" }
+"bxc.aphrody.com" = { type = "CNAME", content = "tunnel:aphrody", rollback = "CNAME aphrody.com" }
+"cad.aphrody.com" = { type = "CNAME", content = "tunnel:aphrody", rollback = "CNAME aphrody.com" }
+"calendar.aphrody.com" = { type = "CNAME", content = "tunnel:aphrody", rollback = "CNAME aphrody.com" }
+"chat.aphrody.com" = { type = "CNAME", content = "tunnel:aphrody", rollback = "CNAME aphrody.com" }
+"console.aphrody.com" = { type = "CNAME", content = "tunnel:aphrody", rollback = "CNAME aphrody.com" }
+"control.aphrody.com" = { type = "CNAME", content = "tunnel:aphrody", rollback = "CNAME aphrody.com" }
+"design.aphrody.com" = { type = "CNAME", content = "tunnel:aphrody", rollback = "CNAME aphrody.com" }
+"docs.aphrody.com" = { type = "CNAME", content = "tunnel:aphrody", rollback = "CNAME aphrody.com" }
+"drive.aphrody.com" = { type = "CNAME", content = "tunnel:aphrody", rollback = "CNAME aphrody.com" }
+"fig.aphrody.com" = { type = "CNAME", content = "tunnel:aphrody", rollback = "CNAME aphrody.com" }
+"inacord.aphrody.com" = { type = "CNAME", content = "tunnel:aphrody", rollback = "CNAME aphrody.com" }
+"mail.aphrody.com" = { type = "CNAME", content = "tunnel:aphrody", rollback = "CNAME aphrody.com" }
+"maps.aphrody.com" = { type = "CNAME", content = "tunnel:aphrody", rollback = "CNAME aphrody.com" }
+# mcp.aphrody.com is the Worker aphrody-mcp-gateway (custom domain, record owned by Workers: device/cloudflare/workers/aphrody-mcp-gateway/deploy.ts); rollback = CNAME tunnel:aphrody.
+"meet.aphrody.com" = { type = "CNAME", content = "tunnel:aphrody", rollback = "CNAME aphrody.com" }
+"n2b.aphrody.com" = { type = "CNAME", content = "tunnel:aphrody", rollback = "CNAME aphrody.com" }
+"nie.aphrody.com" = { type = "CNAME", content = "tunnel:aphrody", rollback = "CNAME aphrody.com" }
+"pdf.aphrody.com" = { type = "CNAME", content = "tunnel:aphrody", rollback = "CNAME aphrody.com" }
+"photos.aphrody.com" = { type = "CNAME", content = "tunnel:aphrody", rollback = "CNAME aphrody.com" }
+"play.aphrody.com" = { type = "CNAME", content = "tunnel:aphrody", rollback = "CNAME aphrody.com" }
+"search.aphrody.com" = { type = "CNAME", content = "tunnel:aphrody", rollback = "CNAME aphrody.com" }
+"sheets.aphrody.com" = { type = "CNAME", content = "tunnel:aphrody", rollback = "CNAME aphrody.com" }
+"slides.aphrody.com" = { type = "CNAME", content = "tunnel:aphrody", rollback = "CNAME aphrody.com" }
+"sound.aphrody.com" = { type = "CNAME", content = "tunnel:aphrody", rollback = "CNAME aphrody.com" }
+"status.aphrody.com" = { type = "CNAME", content = "tunnel:aphrody", rollback = "CNAME aphrody.com" }
+"store.aphrody.com" = { type = "CNAME", content = "tunnel:aphrody", rollback = "CNAME aphrody.com" }
+"translate.aphrody.com" = { type = "CNAME", content = "tunnel:aphrody", rollback = "CNAME aphrody.com" }
 # shenron community gateway, still served by fr2 (static JSON) until shenron moves it to usa: proxied so fr2 can
 # refuse non-Cloudflare clients on 80/443 (cert *.aphrody.com, SSL Full strict).
 "dbfr.aphrody.com" = { type = "A", content = "@@hosts.fr2.public_ip@@", rollback = "A @@hosts.fr2.public_ip@@ proxied=false" }
 
 [dns."aphrody.app"]
-"desktop.aphrody.app" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "CNAME 7a6e3e3d-de15-45f8-9b50-73bdbbc283ae.cfargotunnel.com (tunnel prod)" }
+"desktop.aphrody.app" = { type = "CNAME", content = "tunnel:aphrody", rollback = "CNAME 7a6e3e3d-de15-45f8-9b50-73bdbbc283ae.cfargotunnel.com (tunnel prod)" }
 # Previews <project>-<sha7>.aphrody.app and project domains: Worker aphrody-deploy on route *.aphrody.app/* (explicit records win).
 "*.aphrody.app" = { type = "AAAA", content = "100::", proxied = true, rollback = "delete" }
-"api.aphrody.app" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "A @@hosts.fr2.public_ip@@" }
-"auth.aphrody.app" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "A @@hosts.fr2.public_ip@@" }
-"craft.aphrody.app" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "A @@hosts.fr2.public_ip@@" }
-"deploy.aphrody.app" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "A @@hosts.fr2.public_ip@@" }
-"git.aphrody.app" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "A @@hosts.fr2.public_ip@@" }
-"play.aphrody.app" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "A @@hosts.fr2.public_ip@@" }
-"source.aphrody.app" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "A @@hosts.fr2.public_ip@@" }
-"app-audio.aphrody.app" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "A @@hosts.fr2.public_ip@@" }
-"app-cad.aphrody.app" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "A @@hosts.fr2.public_ip@@" }
-"app-compositing.aphrody.app" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "A @@hosts.fr2.public_ip@@" }
-"app-documents.aphrody.app" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "A @@hosts.fr2.public_ip@@" }
-"app-generation.aphrody.app" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "A @@hosts.fr2.public_ip@@" }
-"app-images.aphrody.app" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "A @@hosts.fr2.public_ip@@" }
-"app-interface-layouts.aphrody.app" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "A @@hosts.fr2.public_ip@@" }
-"app-layout.aphrody.app" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "A @@hosts.fr2.public_ip@@" }
-"app-pdf.aphrody.app" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "A @@hosts.fr2.public_ip@@" }
-"app-photo-processing.aphrody.app" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "A @@hosts.fr2.public_ip@@" }
-"app-slides.aphrody.app" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "A @@hosts.fr2.public_ip@@" }
-"app-tables.aphrody.app" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "A @@hosts.fr2.public_ip@@" }
-"app-vectors.aphrody.app" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "A @@hosts.fr2.public_ip@@" }
-"app-video.aphrody.app" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "A @@hosts.fr2.public_ip@@" }
+"api.aphrody.app" = { type = "CNAME", content = "tunnel:aphrody", rollback = "A @@hosts.fr2.public_ip@@" }
+"auth.aphrody.app" = { type = "CNAME", content = "tunnel:aphrody", rollback = "A @@hosts.fr2.public_ip@@" }
+"craft.aphrody.app" = { type = "CNAME", content = "tunnel:aphrody", rollback = "A @@hosts.fr2.public_ip@@" }
+"deploy.aphrody.app" = { type = "CNAME", content = "tunnel:aphrody", rollback = "A @@hosts.fr2.public_ip@@" }
+"git.aphrody.app" = { type = "CNAME", content = "tunnel:aphrody", rollback = "A @@hosts.fr2.public_ip@@" }
+"play.aphrody.app" = { type = "CNAME", content = "tunnel:aphrody", rollback = "A @@hosts.fr2.public_ip@@" }
+"source.aphrody.app" = { type = "CNAME", content = "tunnel:aphrody", rollback = "A @@hosts.fr2.public_ip@@" }
+"app-audio.aphrody.app" = { type = "CNAME", content = "tunnel:aphrody", rollback = "A @@hosts.fr2.public_ip@@" }
+"app-cad.aphrody.app" = { type = "CNAME", content = "tunnel:aphrody", rollback = "A @@hosts.fr2.public_ip@@" }
+"app-compositing.aphrody.app" = { type = "CNAME", content = "tunnel:aphrody", rollback = "A @@hosts.fr2.public_ip@@" }
+"app-documents.aphrody.app" = { type = "CNAME", content = "tunnel:aphrody", rollback = "A @@hosts.fr2.public_ip@@" }
+"app-generation.aphrody.app" = { type = "CNAME", content = "tunnel:aphrody", rollback = "A @@hosts.fr2.public_ip@@" }
+"app-images.aphrody.app" = { type = "CNAME", content = "tunnel:aphrody", rollback = "A @@hosts.fr2.public_ip@@" }
+"app-interface-layouts.aphrody.app" = { type = "CNAME", content = "tunnel:aphrody", rollback = "A @@hosts.fr2.public_ip@@" }
+"app-layout.aphrody.app" = { type = "CNAME", content = "tunnel:aphrody", rollback = "A @@hosts.fr2.public_ip@@" }
+"app-pdf.aphrody.app" = { type = "CNAME", content = "tunnel:aphrody", rollback = "A @@hosts.fr2.public_ip@@" }
+"app-photo-processing.aphrody.app" = { type = "CNAME", content = "tunnel:aphrody", rollback = "A @@hosts.fr2.public_ip@@" }
+"app-slides.aphrody.app" = { type = "CNAME", content = "tunnel:aphrody", rollback = "A @@hosts.fr2.public_ip@@" }
+"app-tables.aphrody.app" = { type = "CNAME", content = "tunnel:aphrody", rollback = "A @@hosts.fr2.public_ip@@" }
+"app-vectors.aphrody.app" = { type = "CNAME", content = "tunnel:aphrody", rollback = "A @@hosts.fr2.public_ip@@" }
+"app-video.aphrody.app" = { type = "CNAME", content = "tunnel:aphrody", rollback = "A @@hosts.fr2.public_ip@@" }
 
 # Zone rules managed by ref (other rules in the same phase are kept as they are).
 [[rules]]
