@@ -1,0 +1,14 @@
+{
+  "sessionId": "agy-permanent-main",
+  "model": "gemini-3.8-flash",
+  "thinkingLevel": "low",
+  "autoCompactEnabled": true,
+  "autoCompactThresholdChars": 4200,
+  "maxTurnsBeforeCompact": 6,
+  "compactCount": 0,
+  "lastCompactedAt": null,
+  "compactedSummary": "Session permanente Antigravity connectée à Gemini Web App et au PC Windows (%USERPROFILE%\\google). Modèle actif : gemini-3.8-flash (thinkingLevel: low) avec Auto-Compact temps réel et accès complet au système de fichiers.",
+  "workspaceRoot": "%USERPROFILE%\\google",
+  "turns": [],
+  "updatedAt": 1793599032923
+}

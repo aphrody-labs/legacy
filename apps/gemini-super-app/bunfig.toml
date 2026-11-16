@@ -1,0 +1,3 @@
+[test]
+root = "."
+pathIgnorePatterns = ["vendor/**", ".venv/**", "target/**", "node_modules/**"]
