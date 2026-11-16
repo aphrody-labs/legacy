@@ -60,7 +60,7 @@
     "tailwindcss": "^4.3.3"
   },
   "devDependencies": {
-    "@types/bun": "../bun-types",
+    "@types/bun": "catalog:",
     "postcss": "^8.5.6"
   },
   "peerDependencies": {

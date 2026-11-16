@@ -10,6 +10,7 @@
   "workspaces": {
     "packages": [
       "packages/*",
+      "packages/re/ghidra",
       "apps/web/web",
       "apps/nt",
       "apps/nt/modules/web",
