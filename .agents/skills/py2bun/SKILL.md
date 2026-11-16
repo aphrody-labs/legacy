@@ -5,7 +5,7 @@ description: Python to Bun TypeScript transpiler (crate src/py2bun, package pack
 
 # py2bun
 
-Parser `ruff_python_parser` 0.0.22. Emits Bun TS importing `@aphrody/py2bun/runtime` and, for Ghidra, `@aphrody/ghidra/script` (flat API) and `@aphrody/ghidra/java/*` (Java proxy, not exported yet by packages/ghidra). README: `packages/py2bun/README.md`.
+Parser `ruff_python_parser` 0.0.22. Emits Bun TS importing `@aphrody/py2bun/runtime` and, for Ghidra, `@aphrody/ghidra/script` (flat API) and `@aphrody/ghidra/java/*` (Java proxy, not exported yet by packages/re/ghidra). README: `packages/py2bun/README.md`.
 
 - Relay: `hub_call py2bun__py2bun_transpile {source}` returns `{ts, diagnostics, ok}`.
 - CLI (build on fr1): `cargo build --release` in `src/py2bun`, then `py2bun-rs file.py -o file.ts [--async|--sync] [--json] [--strict]`. Python: `uv build` in `packages/py2bun`, `py2bun file.py -o file.ts`. Bun: `bun packages/py2bun/src/cli.ts file.py`.

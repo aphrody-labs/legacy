@@ -1,5 +1,5 @@
 // Async-aware variants used by py2bun in async mode (Ghidra scripts: every call crosses to the JVM).
-// JObject proxies (packages/ghidra) expose `$list()` / `$str()`; anything else behaves as in the sync runtime.
+// JObject proxies (packages/re/ghidra) expose `$list()` / `$str()`; anything else behaves as in the sync runtime.
 import * as py from "./index";
 
 const isJ = (x: any) => x != null && typeof x === "object" && typeof x.$list === "function";

@@ -5,12 +5,12 @@
 
 | Type | Path |
 | :-- | :-- |
-| Bun package | `packages/ghidra` |
+| Bun package | `packages/re/ghidra` |
 
 **Commands**
 
 ```sh
-bun run --cwd packages/ghidra test
+bun run --cwd packages/re/ghidra test
 ```
 
 Part of Aphrody: [aphrody-labs/aphrody](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
@@ -87,5 +87,5 @@ The addon also exports `analyze(path, maxFunctions)` and `version()`. `onBeforeP
 
 ## Tests
 
-- `bun test packages/ghidra` runs locally without Ghidra (mock bridge, flat API, plugin parsing).
+- `bun test packages/re/ghidra` runs locally without Ghidra (mock bridge, flat API, plugin parsing).
 - fr2 integration: `bun scripts/sync-fr2.ts` then on fr2 `GHIDRA_INSTALL_DIR=/srv/ghidra-release/ghidra_12.2_PUBLIC bun scripts/parity/run.ts` (pyghidra via `uv` venv in `/srv/ghidra-release/venv`), `scripts/smoke.ts`, `scripts/native-proof.ts`.

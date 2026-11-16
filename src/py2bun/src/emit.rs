@@ -515,7 +515,7 @@ impl<'s> Emitter<'s> {
                             ));
                         }
                     } else if full == "pyghidra" {
-                        // snake_case API -> camelCase in @aphrody/ghidra (packages/ghidra/PARITY.md)
+                        // snake_case API -> camelCase in @aphrody/ghidra (packages/re/ghidra/PARITY.md)
                         let bind = a.asname.as_ref().map(|x| x.as_str()).unwrap_or("pyghidra").to_string();
                         self.ghidra_seen = true;
                         self.imports.push(format!("import * as {} from \"@aphrody/ghidra\";", ident(&bind)));

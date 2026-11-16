@@ -4,7 +4,7 @@
 //!   file `<name>.ghidra.js` it analyses the binary named by the stub text (or `<name>` itself when the
 //!   stub is empty) with `aphrody-re` and emits an ES module with the analysis report.
 //! * The `onBeforeParse` stub module exports `default functions sections imports exports_ strings entry`;
-//!   the `?ghidra` Bun plugin (`packages/ghidra/src/plugin.ts`) exports a different, JVM-backed set.
+//!   the `?ghidra` Bun plugin (`packages/re/ghidra/src/plugin.ts`) exports a different, JVM-backed set.
 //! * NAPI functions `analyze(path, maxFunctions)` and `version()` for direct fast-path use from Bun.
 #![allow(clippy::missing_safety_doc)]
 

@@ -47,9 +47,9 @@ pub const STDLIB: &[&str] = &["math", "json", "os", "sys", "re", "time", "string
 /// Modules that may be silently dropped.
 pub const IGNORED_MODULES: &[&str] = &["__future__", "typing", "__main__", "exceptions"];
 
-/// Names importable from `@aphrody/ghidra/script`: the fields of `packages/ghidra/src/script.ts` plus
-/// every async function of `packages/ghidra/src/script.generated.ts` (GhidraScript + FlatProgramAPI,
-/// generated from the Java sources by `packages/ghidra/scripts/gen-script-exports.ts`).
+/// Names importable from `@aphrody/ghidra/script`: the fields of `packages/re/ghidra/src/script.ts` plus
+/// every async function of `packages/re/ghidra/src/script.generated.ts` (GhidraScript + FlatProgramAPI,
+/// generated from the Java sources by `packages/re/ghidra/scripts/gen-script-exports.ts`).
 pub const GHIDRA_FLAT: &[&str] = &[
     "currentProgram", "currentAddress", "currentLocation", "currentSelection", "currentHighlight",
     "monitor", "state", "sourceFile",

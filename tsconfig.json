@@ -8,7 +8,7 @@
     { "path": "packages/ffi-bridge" },
     { "path": "packages/gaming" },
     { "path": "packages/google" },
-    { "path": "packages/ghidra" },
+    { "path": "packages/re/ghidra" },
     { "path": "packages/i18n" },
     { "path": "packages/native" },
     { "path": "packages/release" },

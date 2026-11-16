@@ -6,7 +6,7 @@ members = [
   "packages/ai-os/python/agent_core",
   "packages/ai-os/python/hermes_agent_memory",
   "packages/env-kit/loaders/python",
-  "packages/ghidra/scripts/parity",
+  "packages/re/ghidra/scripts/parity",
   "packages/machine/matrix/scripts",
   "tools/factory",
 ]
