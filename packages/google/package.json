@@ -8,6 +8,10 @@
     "url": "git+https://github.com/aphrody-labs/bun-distribution.git",
     "directory": "packages/google"
   },
+  "bin": {
+    "bun-google": "./src/rest/cli.ts",
+    "bun-google-index-public": "./src/rest/public-index-cli.ts"
+  },
   "files": [
     "src"
   ],
@@ -16,6 +20,14 @@
     ".": "./src/index.ts",
     "./runtime": "./src/runtime.ts",
     "./api": "./src/api.ts",
+    "./rest": "./src/rest/index.ts",
+    "./rest/services": "./src/rest/services.ts",
+    "./rest/edge-proxy": "./src/rest/edge-proxy.ts",
+    "./rest/cli": "./src/rest/cli.ts",
+    "./rest/search": "./src/rest/search.ts",
+    "./rest/public-index": "./src/rest/public-index.ts",
+    "./rest/public-index-cli": "./src/rest/public-index-cli.ts",
+    "./rest/password-store": "./src/rest/password-store.ts",
     "./drive-sync": "./src/drive-sync.ts",
     "./drive-model-sync": "./src/drive-model-sync.ts"
   },
@@ -24,6 +36,11 @@
   },
   "scripts": {
     "build": "bun build ./src/index.ts --outdir ./dist --target bun --format esm",
+    "config": "bun src/rest/cli.ts config",
+    "authstatus": "bun src/rest/cli.ts authstatus",
+    "models": "bun src/rest/cli.ts models",
+    "generate": "bun src/rest/cli.ts generate",
+    "stream": "bun src/rest/cli.ts stream",
     "google:status": "bun ./src/cli.ts drive status",
     "google:sync": "bun ./src/cli.ts drive sync",
     "test": "bun test ./test",

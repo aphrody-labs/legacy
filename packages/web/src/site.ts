@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import { lstat, realpath, stat } from "node:fs/promises";
 import { extname, isAbsolute, join, relative, resolve, sep } from "node:path";
-import type { GooglePublicSearchPage, GooglePublicSearchRequest } from "../../bun-google/src/search.ts";
+import type { GooglePublicSearchPage, GooglePublicSearchRequest } from "../../google/src/rest/search.ts";
 
 export type PublicGoogleSearch = (
   request: GooglePublicSearchRequest,

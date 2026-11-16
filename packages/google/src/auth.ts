@@ -3,7 +3,7 @@ import {
   createAntigravityCredentialProvider,
   createAntigravityServices,
   type AntigravityServicesOptions,
-} from "@aphrody/bun-google";
+} from "./rest/index.ts";
 
 export interface GoogleNativeAuthOptions {
   credentialProvider?: GoogleClientOptions["credentialProvider"];

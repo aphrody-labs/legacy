@@ -1,36 +1,15 @@
-# Google services for the Aphrody Bun fork
+# Google REST services (`@aphrody/google/rest`)
 
-<!-- catalog:begin unit -->
-> Google REST services over the Aphrody Bun runtime, with explicit credential ownership.
+`@aphrody/google/rest` uses the built-in `bun:google` transport. It needs the
+fork containing that module. The REST modules have no npm runtime dependencies.
 
-| Type | Path |
-| :-- | :-- |
-| Bun package | `packages/bun-google` |
-
-**Commands**
-
-```sh
-bun run --cwd packages/bun-google config
-bun run --cwd packages/bun-google authstatus
-bun run --cwd packages/bun-google models
-bun run --cwd packages/bun-google generate
-bun run --cwd packages/bun-google stream
-bun run --cwd packages/bun-google test
-```
-
-Part of Aphrody: [aphrody-labs/aphrody](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
-<!-- catalog:end -->
-
-`@aphrody/bun-google` uses the built-in `bun:google` transport. It needs the
-fork containing that module. The package has no npm runtime dependencies.
-
-`@aphrody/bun-google/edge-proxy` owns the disk caching proxy used by Google
+`@aphrody/google/rest/edge-proxy` owns the disk caching proxy used by Google
 Fonts. It uses Bun HTTP, file and compression APIs directly, with no Aphrody
 checkout, Yolo runtime or runtime SDK dependency. Its loopback tests cover cache
 fills, concurrent misses, Brotli variants, immutable assets and rejected routes.
 
 ```ts
-import { createGoogleServices } from "@aphrody/bun-google";
+import { createGoogleServices } from "@aphrody/google/rest";
 
 // Supply a provider owned by your existing authenticated application.
 const google = createGoogleServices({ credentialProvider });
@@ -75,7 +54,7 @@ adapters were transferred under `aphrody/`. Their complete engine and release
 qualification remains separate from this REST SDK.
 Protected credentials and cookie stores retain their original locations.
 The transferred `@aphrody/google` facade is a root Bun workspace package.
-Its Google transport resolves through `@aphrody/bun-google`; it does not depend
+Its Google transport resolves through `@aphrody/google/rest`; it does not depend
 on the location of a neighbouring Aphrody checkout.
 This package does not claim complete
 Google API or JSC/V8 compatibility. It performs no automatic retries of writes.
@@ -144,7 +123,7 @@ extend the authenticated `bun:google` endpoint allowlist or copy a SERP parser.
 The public Bun download/site server routes `/api/search` only for declared site
 hosts. It forces web SafeSearch, rejects privileged parameters, drops incoming
 auth/cookie headers and returns a redacted 503 when Google blocks the request.
-Deployments install `@aphrody/bun-google/search` or explicitly configure its source
+Deployments install `@aphrody/google/rest/search` or explicitly configure its source
 module via `GOOGLE_SEARCH_SDK_MODULE`, and qualify `GOOGLE_SEARCH_OWNER`/aphrody.
 This is a capability-owner CLI adapter, not an in-process native search binding.
 The Windows anonymous live probe on 2026-10-11 was blocked by Google; fixture
@@ -152,7 +131,7 @@ success does not establish production availability. No auth fallback was attempt
 
 ## Public crawl index and standalone CLI
 
-`@aphrody/bun-google/public-index` exports `createPublicIndexSearch({ root,
+`@aphrody/google/rest/public-index` exports `createPublicIndexSearch({ root,
 collections })`. It verifies approved public snapshot pointers, SHA-256 content,
 provenance, exact hosts and limits before building one in-memory SQLite FTS5
 projection with isolated collection statistics. Searches return `{ body, etag,
@@ -161,7 +140,7 @@ cache }`; `body` includes `query`, `organic`, `source: "public-crawl-cache"`,
 snapshots. `close()` releases the projection. No private home index, browser
 profile, credentials or implicit database supplies missing configuration.
 
-The separate `bun-google-index-public` binary and `./public-index-cli` subpath
+The separate `bun-google-index-public` binary and `./rest/public-index-cli` subpath
 delegate to that same SDK. They require an absolute export root and an absolute
 JSON policy file containing the collection configuration map:
 
@@ -216,11 +195,9 @@ packs SDK sources and Boq rather than the entire transferred application tree.
 Interactive PKCE login remains with the original process owner; native replacement
 requires faithful callback/refresh qualification.
 
-Run `bun check`, `bun lint`, `bun fmt` and `bun bd -j1 test ./packages/bun-google/test`
+Run `bun check`, `bun lint`, `bun fmt` and `bun bd -j1 test ./packages/google/test`
 from the root. Tests use mocked stores and loopback HTTP, never live credentials.
-Source version 1.4.4, registry availability and native release receipts qualify separately;
-see [publication boundary](../../docs/project/google-browser-publication.md).
+Registry availability and native release receipts qualify separately.
 Release graph catalogs immutable hashes, symbols and relative references with explicit
 unsupported inputs, truncation and unresolved calls. It is not full dynamic call
-coverage or JSC/V8 parity. [AGENTS.md](AGENTS.md), [CLAUDE.md](CLAUDE.md),
-[GEMINI.md](GEMINI.md), [llms.txt](llms.txt) are dedicated entrypoints.
+coverage or JSC/V8 parity. Agent rules: [AGENTS.md](../../AGENTS.md).

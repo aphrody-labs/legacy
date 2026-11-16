@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 import { createM3Site } from "../src/site.ts";
-import { createGooglePublicSearch } from "../../../packages/bun-google/src/search";
+import { createGooglePublicSearch } from "../../google/src/rest/search";
 import { createPublicCatalog, type PublicCatalogOptions } from "../../../packages/bun-m3/src/catalog";
-import { createGoogleOAuthServer, createMemoryGoogleOAuthStore } from "../../../packages/bun-google/src/oauth";
+import { createGoogleOAuthServer, createMemoryGoogleOAuthStore } from "../../google/src/rest/oauth";
 import { createNativeM3Renderer } from "../../../packages/bun-m3/src/native-renderer";
 import { searchPage } from "./search-page";
 import { publicPwaResponse } from "./pwa";
