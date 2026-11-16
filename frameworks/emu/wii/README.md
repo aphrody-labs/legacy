@@ -208,15 +208,15 @@ Le serveur (`http://127.0.0.1:8780`) expose un plan de contrôle complet :
 
 ## Infrastructure de Production Hostinger, CDN Shenron & Mini-Jeu Shenron
 
-Le monorepo est déployé en production sur une infrastructure bi-nœud reliée par tunnel privé WireGuard (`10.200.77.0/24`) :
+Le monorepo est déployé en production sur une infrastructure bi-nœud reliée par tunnel privé WireGuard (le mesh) :
 
 | Nœud | Hôte / IP | Rôle | Services |
 | :--- | :--- | :--- | :--- |
-| **Edge Principal (`prod`)** | `72.60.186.43` (`3dland.tech`, `play.dragonballfr.com`) | VPS Hostinger KVM 8 (8 vCPU AMD EPYC 9354P, 32 GiB RAM) | `wii-os-shenron.service` (`:8780`) + Passerelle Nginx `shenron-gateway` (`COOP/COEP`, HTTP Range `206 Partial Content`) |
-| **Réplica Storage (`shenron`)** | `10.200.77.3` (WireGuard VPN) | Serveur de stockage & réplica CDN Shenron | `wii-os-shenron.service` (`:8780`) + `/srv/cdn-shenron` synchronisé |
+| **Edge Principal (`prod`)** | `3dland.tech` (`play.dragonballfr.com`) | VPS Hostinger KVM 8 (8 vCPU AMD EPYC 9354P, 32 GiB RAM) | `wii-os-shenron.service` (`:8780`) + Passerelle Nginx `shenron-gateway` (`COOP/COEP`, HTTP Range `206 Partial Content`) |
+| **Réplica Storage (`shenron`)** | `fr2` (WireGuard VPN) | Serveur de stockage & réplica CDN Shenron | `wii-os-shenron.service` (`:8780`) + `/srv/cdn-shenron` synchronisé |
 
 ### URLs de Production Live
-- **Menu Système Wii 4.3E (Pixel-Perfect)** : `http://3dland.tech/` (et `http://72.60.186.43:8780/`)
+- **Menu Système Wii 4.3E (Pixel-Perfect)** : `http://3dland.tech/`
 - **Mini-Jeu Shenron & Portail CDN Shenron** : `http://3dland.tech/shenron` et `https://play.dragonballfr.com/shenron`
 - **Émulateur WebGPU Direct (*DBZ: Budokai Tenkaichi 3*)** : `http://3dland.tech/gecko-web/index.html?game=budokai-tenkaichi-3-eu&autostart=1`
 - **Manifeste Global CDN Shenron** : `http://3dland.tech/cdn/shenron/manifest.json` (`https://play.dragonballfr.com/cdn/shenron/manifest.json`)

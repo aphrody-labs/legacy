@@ -9,8 +9,8 @@ files_to_sync = [
     (r"C:\src\wii\wii-os\frontend\assets\js\main.js", "/srv/wii-os/frontend/assets/js/main.js"),
 ]
 
-ssh_key = r"C:\Users\aphro\.ssh\id_ed25519_aphrody"
-host = "root@72.60.186.43"
+# ssh alias of the production host (~/.ssh/config): key and address stay out of the repository.
+host = "prd"
 
 for local_path, remote_path in files_to_sync:
     print(f"Uploading {local_path} -> {remote_path}...")
@@ -18,7 +18,7 @@ for local_path, remote_path in files_to_sync:
         data = f.read()
     
     cmd = [
-        "ssh.exe", "-i", ssh_key, "-o", "StrictHostKeyChecking=no", host,
+        "ssh", host,
         f"mkdir -p $(dirname {remote_path}) && cat > {remote_path}"
     ]
     p = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -30,7 +30,7 @@ for local_path, remote_path in files_to_sync:
 
 print("\nRestarting wii-os-shenron.service...")
 cmd_restart = [
-    "ssh.exe", "-i", ssh_key, "-o", "StrictHostKeyChecking=no", host,
+    "ssh", host,
     "systemctl restart wii-os-shenron.service && systemctl is-active wii-os-shenron.service"
 ]
 p = subprocess.run(cmd_restart, capture_output=True, text=True, encoding="utf-8", errors="replace")

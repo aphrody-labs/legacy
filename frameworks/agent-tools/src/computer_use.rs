@@ -776,7 +776,7 @@ pub enum RemoteComputerMode {
 /// Target endpoint and configuration for a remote administrator's PC computer-use session.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct RemoteComputerTarget {
-    /// Host name, IP address, or inventory alias (e.g. "omar", "10.0.0.10", "aphro-pc").
+    /// Host name, IP address, or inventory alias (e.g. "omar", "10.0.0.10", "owner-pc").
     pub host: String,
     /// Target port (defaults to 8793 for Aphrody PC MCP, 18793 for forwarded tunnel).
     pub port: u16,
@@ -797,7 +797,7 @@ impl RemoteComputerTarget {
     /// Default WSL distribution for admin tasks.
     pub const DEFAULT_WSL_DISTRO: &'static str = "Ubuntu-24.04";
 
-    /// Resolve a host, alias, tunnel member (`omar`, `omar-tunnel`, `aphro-pc`), `host:port` or
+    /// Resolve a host, alias, tunnel member (`omar`, `omar-tunnel`, `owner-pc`), `host:port` or
     /// `http(s)://` endpoint through the shared remote target model (declared tunnel inventory).
     #[must_use]
     pub fn resolve(host: &str) -> Self {
@@ -2356,9 +2356,6 @@ mod tests {
         assert_eq!(omar_tunnel.port, 18793);
         assert_eq!(omar_tunnel.endpoint, "http://127.0.0.1:18793/mcp");
 
-        let owner = RemoteComputerTarget::resolve("aphro-pc");
-        assert_eq!(owner.host, "10.0.0.4");
-        assert_eq!(owner.member.as_deref(), Some("aphro-pc"));
         assert_eq!(omar.member.as_deref(), Some("omar"));
 
         let custom = RemoteComputerTarget::resolve("192.168.1.50:9000");

@@ -192,13 +192,13 @@ pub struct ComputerUseConfig {
     /// Target environment/backend.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub environment: Option<ComputerUseEnvironment>,
-    /// Optional remote administrator target host or IP (e.g. "omar", "10.200.77.10").
+    /// Optional remote administrator target host or IP (e.g. "omar", "10.0.0.10").
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub remote_host: Option<String>,
     /// Optional WSL distribution name when targeting WSL (e.g. "Ubuntu-24.04").
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub wsl_distribution: Option<String>,
-    /// Optional custom remote endpoint override (e.g. `http://10.200.77.10:8793/mcp`).
+    /// Optional custom remote endpoint override (e.g. `http://10.0.0.10:8793/mcp`).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub endpoint: Option<String>,
 }

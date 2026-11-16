@@ -1887,13 +1887,18 @@ fn build_exe_package(
         workspace.join("wii.exe"),
         target_dir.join("release/wii.exe"),
         target_dir.join("debug/wii.exe"),
-        PathBuf::from(r"C:\Users\aphro\AppData\Local\Aphrody\cache\cargo-target\release\wii.exe"),
-        PathBuf::from(r"C:\Users\aphro\AppData\Local\Aphrody\cache\cargo-target\debug\wii.exe"),
         target_dir.join("release/wii-menu-native.exe"),
         target_dir.join("debug/wii-menu-native.exe"),
-        PathBuf::from(r"C:\Users\aphro\AppData\Local\Aphrody\cache\cargo-target\release\wii-menu-native.exe"),
-        PathBuf::from(r"C:\Users\aphro\AppData\Local\Aphrody\cache\cargo-target\debug\wii-menu-native.exe"),
     ];
+    // The shared cargo cache of this host (LOCALAPPDATA\Aphrody\cache\cargo-target), when it exists.
+    if let Some(local) = env::var_os("LOCALAPPDATA") {
+        let cache = PathBuf::from(local).join("Aphrody").join("cache").join("cargo-target");
+        for profile in ["release", "debug"] {
+            for exe in ["wii.exe", "wii-menu-native.exe"] {
+                native_candidates.push(cache.join(profile).join(exe));
+            }
+        }
+    }
     if let Ok(curr) = env::current_exe() {
         native_candidates.insert(0, curr);
     }

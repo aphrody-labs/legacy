@@ -2320,13 +2320,13 @@ async fn serve_shenron_cdn_manifest(State(state): State<AppState>) -> Response {
         "edges": [
             {
                 "id": "hostinger-prod",
-                "host": "72.60.186.43",
+                "host": "3dland.tech",
                 "role": "Primary Public Edge & WebGPU COOP/COEP Origin",
                 "status": "online"
             },
             {
                 "id": "shenron-node",
-                "host": "10.200.77.3",
+                "host": "fr2",
                 "role": "WireGuard High-Capacity RVZ & RE Storage Node",
                 "status": "online"
             }

@@ -54,7 +54,7 @@ The owner-authorized Windows migration uses service `@aphrody/bun-video` and nam
 `crunchyroll.cookies`. From `C:/bun`:
 
 ```powershell
-bun bd -j2 run ./scripts/aphrody/hls-keychain.ts --migrate --source C:/Users/aphro/.aphrody/cookies/bun-video/cookie.json --configure-lab
+bun bd -j2 run ./scripts/aphrody/hls-keychain.ts --migrate --source %USERPROFILE%/.aphrody/cookies/bun-video/cookie.json --configure-lab
 bun bd -j2 run ./scripts/aphrody/hls-keychain.ts --check
 bun bd -j2 run ./scripts/aphrody/hls-lab.ts --probe
 ```

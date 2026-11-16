@@ -15,7 +15,7 @@ with open(p, 'w', encoding='utf-8') as f:
 print('Updated frontend/index.html')
 """
 
-cmd = ['ssh.exe', '-i', r'C:\Users\aphro\.ssh\id_ed25519_aphrody', '-o', 'StrictHostKeyChecking=no', 'root@72.60.186.43', 'python3']
+cmd = ['ssh', 'prd', 'python3']
 p = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 stdout, stderr = p.communicate(input=remote_script.encode())
 print("stdout:", stdout.decode())

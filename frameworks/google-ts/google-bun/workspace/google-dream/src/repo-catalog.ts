@@ -119,25 +119,17 @@ export interface GoogleCandidateProfile {
   flagshipProjects: string[];
 }
 
-export const YOHAN_PIERRE_GOOGLE_PARIS_PROFILE: GoogleCandidateProfile = {
-  name: "Yohan Pierre",
-  age: 23,
-  location: "210 Avenue de Lodeve, 34080 Montpellier, France",
-  targetRoles: [
-    "Software Engineer (L4/L5)",
-    "Customer Engineer GCP",
-    "Solutions Architect",
-  ],
-  targetOffices: [
-    "Google Cloud Paris (8 Rue de Londres / Velizy)",
-    "Googleplex Mountain View (Building 43)",
-  ],
-  hiringPillars: ["GCA", "RRK", "Leadership", "Googliness"],
-  assistiveMission:
-    "From compiling Chromium OS & AOSP at 14 in Guadeloupe without Wi-Fi to engineering Stargardt monocular high-contrast WebGPU WGSL shaders, Google Glass / Project Astra assistive interfaces, and sovereign europe-west9 cloud systems.",
-  flagshipProjects: [
-    "google-bun (Sovereign Google Stack in Upstream Bun v1.4.4+, BOQ, Wiz, M3, TS7, Oxc, gVisor)",
-    "gcloud-learn (100% TypeScript Serverless SQLite WAL RAG, WebGPU 3D, europe-west9 Terraform)",
-    "carbon & aphrody (Keyless Google AI Ultra bridge, GPUI Zed fork, 139/139 live HTTPS endpoints)",
-  ],
-};
+/**
+ * The candidate profile is personal data: it lives outside the repository, in
+ * `$APHRODY_CANDIDATE_PROFILE` or `~/.config/aphrody/google-candidate-profile.json`. Null when absent.
+ */
+export function loadCandidateProfile(
+  path = Bun.env.APHRODY_CANDIDATE_PROFILE ??
+    `${Bun.env.HOME ?? Bun.env.USERPROFILE}/.config/aphrody/google-candidate-profile.json`,
+): GoogleCandidateProfile | null {
+  try {
+    return JSON.parse(require("node:fs").readFileSync(path, "utf8")) as GoogleCandidateProfile;
+  } catch {
+    return null;
+  }
+}

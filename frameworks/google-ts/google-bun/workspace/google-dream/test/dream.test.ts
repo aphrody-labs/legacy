@@ -7,7 +7,7 @@ import {
   GoogleDrive20TbSyncEngine,
   GOOGLE_OFFICIAL_REPOS,
   GOOGLE_CLOUD_QUIZZES,
-  YOHAN_PIERRE_GOOGLE_PARIS_PROFILE,
+  loadCandidateProfile,
 } from "../src/index.ts";
 
 describe("@google-bun/google-dream: Stargardt Assistive WebGPU, YouTube Engine, 20TB Drive Sync & Google Paris Profile", () => {
@@ -51,12 +51,13 @@ describe("@google-bun/google-dream: Stargardt Assistive WebGPU, YouTube Engine, 
     expect(GOOGLE_CLOUD_QUIZZES[0].question).toContain("Cloud Spanner");
     expect(GOOGLE_CLOUD_QUIZZES[0].correctIndex).toBe(1);
 
-    expect(YOHAN_PIERRE_GOOGLE_PARIS_PROFILE.name).toBe("Yohan Pierre");
-    expect(YOHAN_PIERRE_GOOGLE_PARIS_PROFILE.hiringPillars).toEqual([
-      "GCA",
-      "RRK",
-      "Leadership",
-      "Googliness",
-    ]);
+    // A sample profile file: the real one is personal and stays outside the repository.
+    const sample = `${import.meta.dir}/candidate-profile.sample.json`;
+    require("node:fs").writeFileSync(sample, JSON.stringify({ name: "Sample Candidate", age: 30, location: "Paris", targetRoles: ["SWE"], targetOffices: ["Paris"], hiringPillars: ["GCA", "RRK", "Leadership", "Googliness"], assistiveMission: "-", flagshipProjects: [] }));
+    const p = loadCandidateProfile(sample);
+    expect(p?.name).toBe("Sample Candidate");
+    expect(p?.hiringPillars).toEqual(["GCA", "RRK", "Leadership", "Googliness"]);
+    expect(loadCandidateProfile(`${import.meta.dir}/absent.json`)).toBeNull();
+    require("node:fs").rmSync(sample);
   });
 });

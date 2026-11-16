@@ -408,13 +408,15 @@ export function getCached(path: string, cachePath = defaultCachePath()): string 
 /**
  * Every discovered value that must never appear in a tracked file, read from the cache only (no network): what
  * `resolve` and `identity` last saw. The hygiene rule personal-data matches these, so the list never enters the repository.
+ * Where no cache exists (CI), APHRODY_SENSITIVE_VALUES holds the same list, one value per line (a repository secret).
  */
 export function sensitiveValues(cachePath = defaultCachePath()): { values: string[]; machine?: string } {
   let c: Cache = {};
   try {
     c = JSON.parse(readFileSync(cachePath, "utf8"));
   } catch {
-    return { values: [] };
+    const env = (Bun.env.APHRODY_SENSITIVE_VALUES ?? "").split(/\r?\n/).map((v) => v.trim()).filter((v) => v.length >= 5);
+    return { values: env, machine: Bun.env.APHRODY_SENSITIVE_MACHINE || undefined };
   }
   const out = new Set<string>();
   const id = c.identity?.value as Identity | undefined;

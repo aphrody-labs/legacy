@@ -126,7 +126,7 @@ if (!msgCount || msgCount.c === 0) {
     "system",
     "CDN Shenron & Wii OS 4.3E en Production",
     "Shenron Éternel",
-    "Infrastructure déployée sur prod (72.60.186.43 / 3dland.tech) et synchronisée avec le nœud shenron (10.200.77.3).\n• Émulateur WebGPU Gecko WASM : /emulator/\n• Mini-Jeu Shenron (3 modes) : /shenron\n• Streaming Disque RVZ HTTP 206 : /cdn/shenron/games/budokai-tenkaichi-3-eu.rvz\n• 41 473 fonctions PowerPC & 415 textures RGBA8.",
+    "Infrastructure déployée sur prod (3dland.tech) et synchronisée avec le nœud shenron (mesh).\n• Émulateur WebGPU Gecko WASM : /emulator/\n• Mini-Jeu Shenron (3 modes) : /shenron\n• Streaming Disque RVZ HTTP 206 : /cdn/shenron/games/budokai-tenkaichi-3-eu.rvz\n• 41 473 fonctions PowerPC & 415 textures RGBA8.",
     "RDSPAF",
     60,
     0,
@@ -333,14 +333,14 @@ function buildShenronManifest() {
     nodes: [
       {
         id: "prod",
-        host: "72.60.186.43",
+        host: "3dland.tech",
         domain: "3dland.tech",
         role: "edge-origin-coop-coep",
         status: "online",
       },
       {
         id: "shenron",
-        host: "10.200.77.3",
+        host: "fr2",
         role: "storage-replica-node",
         status: "online",
       },
@@ -383,7 +383,7 @@ const netplayState = {
     {
       seq: 1,
       eventType: "ready",
-      message: "Arène NetPlay Dragon Ball Z : Budokai Tenkaichi 3 active sur 72.60.186.43:2626",
+      message: "Arène NetPlay Dragon Ball Z : Budokai Tenkaichi 3 active sur 3dland.tech:2626",
     },
   ],
 };
@@ -666,7 +666,7 @@ export const server = Bun.serve<WsData>({
           transport: "dolphin-netplay-ffi",
           channelId: "budokai-tenkaichi-3-eu",
           hostNickname: "Sangoku PAL",
-          hostAddress: "72.60.186.43",
+          hostAddress: "3dland.tech",
           port: 2626,
           padBuffer: 6,
           gameDigest: "RDSPAF-PAL-EU",

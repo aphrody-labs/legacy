@@ -10,7 +10,7 @@
 //   now; comments explain why, not what (https://google.github.io/eng-practices/review/reviewer/looking-for.html).
 // - Google developer documentation style guide, "Timeless documentation": no time-relative or version-bound
 //   statements that rot (https://developers.google.com/style/timeless-documentation).
-import { existsSync, readFileSync, statSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { sensitiveValues } from "../system/env-kit/src/discover.ts";
 import { isNonSourceProse, sourceLanguage } from "../frameworks/i18n-ts/src/detect.ts";
@@ -101,8 +101,19 @@ let siteRe: RegExp | null | undefined;
 function sitePattern(): RegExp | null {
   if (siteRe !== undefined) return siteRe;
   const { values, machine } = sensitiveValues();
+  // A host may be named after a unit of this repository (fr2 is called after system/bunos): a unit name is public.
+  const units = new Set(
+    ["system", "frameworks", "apps", "tools", "device"].flatMap((d) => {
+      try {
+        return readdirSync(join(import.meta.dir, "..", d));
+      } catch {
+        return [];
+      }
+    }),
+  );
   const alts = new Set<string>();
   for (const s of values) {
+    if (units.has(s)) continue;
     const net = /^(\d+\.\d+\.\d+)\.\d+$/.exec(s);
     alts.add(net && /^10\./.test(s) ? escRe(net[1]!) + "\\.\\d{1,3}" : escRe(s));
   }
@@ -121,8 +132,8 @@ const PD_CREDIT = /copyright|\(c\)|author|signed-off|co-authored|maintainer|cont
 /** `ctx`: the whole source line when `l` is only a string literal of it (version and credit words live around the literal); read only when a pattern matched. */
 export function personalData(l: string, ctx: () => string = () => l): boolean {
   const re = sitePattern();
+  if (re) return re.test(l); // the real values are known: match them, not shapes that upstream samples share
   return (
-    (re?.test(l) ?? false) ||
     PD_USERPATH.test(l) ||
     (PD_IPV4.test(l) && !PD_VERSIONISH.test(ctx())) ||
     (PD_EMAIL.test(l) && !PD_CREDIT.test(ctx()))
