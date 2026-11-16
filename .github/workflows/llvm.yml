@@ -1,6 +1,6 @@
 # LLVM tooling on the one toolchain of src (scripts/toolchain.ts: Chromium's clang, lld, llvm-* and the rustc on the
 # same LLVM): sanitizers and static analysis of the C core, llvm-cov coverage of C and Rust, and the size report of a
-# release binary. Runs on the fr1 runners like ci.yml; the heavy cargo steps go through aphrody-heavy.
+# release binary. The C and coverage jobs run on GitHub-hosted runners, the release build of ay on the fr1 runners (aphrody-heavy).
 name: llvm
 on:
   push:
@@ -31,32 +31,38 @@ permissions: { contents: read }
 env:
   RUSTC_WRAPPER: ""
   CARGO_TERM_COLOR: never
-  CARGO_TARGET_DIR: /home/ubuntu/build/llvm-target
-  HEAVY_WAIT_MAX: "2700"
 jobs:
+  # The C core and the coverage jobs are light enough for a GitHub-hosted runner (they stay green while the fr1 runners are
+  # being rebuilt); only the release build of ay needs the factory.
   c-core:
     name: C core (ASan + UBSan, clang-tidy, clang-format, size)
-    runs-on: [self-hosted, fr1]
+    runs-on: ubuntu-latest
     timeout-minutes: 40
     steps:
       - uses: actions/checkout@v7
         with: { submodules: false, fetch-depth: 0 }
+      - uses: oven-sh/setup-bun@v2
       - name: Toolchain
         run: |
           bun scripts/toolchain.ts install
           bun scripts/toolchain.ts bin >> "$GITHUB_PATH"
+      - name: Versions (rustc, clang, ld.lld of one LLVM)
+        run: |
+          rustc -vV
+          "$(bun scripts/toolchain.ts bin)/clang" --version
+          "$(bun scripts/toolchain.ts bin)/ld.lld" --version
       - name: ASan + UBSan over every exported function
         run: make -C src sanitize
       - name: clang-tidy
         run: make -C src tidy
       - name: clang-format (lines changed by the push)
-        # clang-format is not in Chromium's clang package: the LLVM release of apt.llvm.org on the runner. The sources
+        # clang-format is not in Chromium's clang package: the one of the runner image (apt). The sources
         # predate .clang-format, so only the lines a push touches are held to it (git-clang-format against the base).
         run: |
           base="${{ github.event.before }}"
           [ -n "$base" ] && git cat-file -e "$base^{commit}" 2>/dev/null || base=HEAD~1
-          llvm=$(ls -d /usr/lib/llvm-*/bin | sort -V | tail -n 1)
-          out=$("$llvm/git-clang-format" --binary "$llvm/clang-format" --diff "$base" -- src/**/*.c src/**/*.h || true)
+          command -v git-clang-format >/dev/null || sudo apt-get install -y clang-format
+          out=$(git clang-format --diff "$base" -- 'src/**/*.c' 'src/**/*.h' || true)
           case "$out" in "no modified files to format" | "clang-format did not modify any files") exit 0 ;; esac
           echo "$out"; exit 1
       - name: Section sizes of libaysys.so (llvm-objdump)
@@ -65,11 +71,12 @@ jobs:
         with: { name: libaysys-size, path: "${{ runner.temp }}/libaysys-size.txt" }
   coverage:
     name: "coverage (llvm-cov of the C core and of Rust)"
-    runs-on: [self-hosted, fr1]
+    runs-on: ubuntu-latest
     timeout-minutes: 120
     steps:
       - uses: actions/checkout@v7
         with: { submodules: false }
+      - uses: oven-sh/setup-bun@v2
       - name: Toolchain
         run: |
           bun scripts/toolchain.ts install
@@ -87,9 +94,9 @@ jobs:
             kernel wayland nt wine wasm ui drivers | tee "$RUNNER_TEMP/coverage-c.txt"
       - name: Rust coverage (cargo-llvm-cov on the chromium rustc, LLVM tools of the same revision)
         run: |
-          command -v cargo-llvm-cov >/dev/null || aphrody-heavy cargo install --locked cargo-llvm-cov
+          command -v cargo-llvm-cov >/dev/null || cargo install --locked cargo-llvm-cov
           export LLVM_COV="$(command -v llvm-cov)" LLVM_PROFDATA="$(command -v llvm-profdata)"
-          aphrody-heavy cargo llvm-cov --summary-only -p aphrody-core | tee "$RUNNER_TEMP/coverage-rust.txt"
+          cargo llvm-cov --summary-only -p aphrody-core | tee "$RUNNER_TEMP/coverage-rust.txt"
       - uses: actions/upload-artifact@v4
         with:
           name: coverage
@@ -101,6 +108,9 @@ jobs:
     if: github.event_name != 'push'
     runs-on: [self-hosted, fr1]
     timeout-minutes: 150
+    env:
+      CARGO_TARGET_DIR: /home/ubuntu/build/llvm-target
+      HEAVY_WAIT_MAX: "2700"
     steps:
       - uses: actions/checkout@v7
         with: { submodules: false }
